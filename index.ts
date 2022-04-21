@@ -8,7 +8,7 @@ function createWindow(){
     width: 1366,
     height: 768
   });
-  win.loadFile(`../public/aquarium.html`);
+  win.loadFile(`../src/aquarium.html`);
 }
 
 
