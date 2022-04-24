@@ -74,3 +74,23 @@ function startFrame(){
 }
 
 startFrame();
+
+
+
+// void render() {
+//     // Draw a triangle rotated in the direction of velocity
+//     float theta = velocity.heading2D() + radians(90);
+//     // heading2D() above is now heading() but leaving old syntax until Processing.js catches up
+    
+//     fill(200, 100);
+//     stroke(255);
+//     pushMatrix();
+//     translate(position.x, position.y);
+//     rotate(theta);
+//     beginShape(TRIANGLES);
+//     vertex(0, -r*2);
+//     vertex(-r, r*2);
+//     vertex(r, r*2);
+//     endShape();
+//     popMatrix();
+//   }
