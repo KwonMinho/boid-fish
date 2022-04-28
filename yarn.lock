@@ -592,6 +592,11 @@
   "resolved" "https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz"
   "version" "1.0.2"
 
+"Vector@^0.0.1":
+  "integrity" "sha1-1yG9CeBhfD/MuP4/xte0L5kpHWE="
+  "resolved" "https://registry.npmjs.org/Vector/-/Vector-0.0.1.tgz"
+  "version" "0.0.1"
+
 "wrappy@1":
   "integrity" "sha1-tSQ9jz7BqjXxNkYFvA0QNuMKtp8="
   "resolved" "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz"

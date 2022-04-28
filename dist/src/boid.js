@@ -1,4 +1,5 @@
 import PVector from "pvectorjs";
+// todo - pvectorjs ==> vecti
 var MAX_ANGLE = 360;
 var MIN_ANGLE = 0;
 var CURRENT_FISH_SRC = './resource/blowfish.svg';
