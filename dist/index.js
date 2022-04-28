@@ -2,9 +2,10 @@ var _a = require('electron'), app = _a.app, BrowserWindow = _a.BrowserWindow, To
 function createWindow() {
     var win = new BrowserWindow({
         width: 1366,
-        height: 768
+        height: 768,
+        nodeIntegration: true,
     });
-    win.loadFile("../public/aquarium.html");
+    win.loadFile("../src/aquarium.html");
 }
 app.whenReady().then(function () {
     createWindow();

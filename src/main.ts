@@ -1,96 +1,40 @@
+import Boid from "./boid.js";
+import Flock from "./flock.js";
+
 let canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('canvas');
 let ctx:CanvasRenderingContext2D = canvas.getContext('2d');
 
 
-canvas.width = window.innerWidth - 100;
-canvas.height = window.innerWidth - 100;
+canvas.width = window.innerWidth;
+canvas.height = window.innerWidth;
 
-const MONITOR_HZ:number = 144;
-
-let dino = {
-    x: 10,
-    y: 200,
-    width: 50,
-    height: 50,
-
-    draw(){
-        ctx.fillStyle = 'green';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-    }
-};
+const MONITOR_HZ: number = 144;
+let timer: number = 0;
 
 
-dino.draw();
+const flock:Flock = new Flock();
 
-const fish = new Image();
-fish.src = './resource/blowfish.svg';
-console.log(fish);
-
-class Obstacle{
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-
-    constructor() {
-        this.x = 0;
-        this.y = 0;
-        this.width = 50;
-        this.height = 50;
-    }
-
-    draw(){
-        ctx.fillStyle = 'red';
-        // ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.drawImage(fish, this.x, this.y)
-    }
-}
-
-
-let timer = 0;
-let obstaclePool: Array<Obstacle> = [];
-
-function startFrame(){
-    requestAnimationFrame(startFrame);
+function animation(){
+    requestAnimationFrame(animation);
     timer++;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-
-    if ( timer % 144 === 0 ) {
-        obstaclePool.push(
-            new Obstacle()
+    
+    if(timer % MONITOR_HZ === 0){
+        const randomX: number = Math.random() * (canvas.width-1) + canvas.width;
+        const randomY: number = Math.random() * (canvas.height-1) + canvas.height;
+        const boid: Boid = new Boid(
+            randomX, 
+            randomY,
+            canvas.width,
+            canvas.height, 
+            ctx
         );
+        flock.addBoid(boid)
     }
 
-    obstaclePool.forEach((ob)=>{
-        ob.x++;
-        ob.draw();
-    });
-
-
-    dino.x++;
-    dino.draw();
+    flock.run();
 }
 
-startFrame();
-
-
-
-// void render() {
-//     // Draw a triangle rotated in the direction of velocity
-//     float theta = velocity.heading2D() + radians(90);
-//     // heading2D() above is now heading() but leaving old syntax until Processing.js catches up
-    
-//     fill(200, 100);
-//     stroke(255);
-//     pushMatrix();
-//     translate(position.x, position.y);
-//     rotate(theta);
-//     beginShape(TRIANGLES);
-//     vertex(0, -r*2);
-//     vertex(-r, r*2);
-//     vertex(r, r*2);
-//     endShape();
-//     popMatrix();
-//   }
+animation();

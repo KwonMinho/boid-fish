@@ -1,5 +1,7 @@
 import Boid from "./boid";
 
+
+
 class Flock {
     boids: Array<Boid>
 
@@ -9,7 +11,7 @@ class Flock {
 
     run(): void {
         this.boids.forEach((boid)=>{
-            boid.run();
+            boid.run(this.boids);
         })
     }
 
