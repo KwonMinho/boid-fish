@@ -1,4 +1,4 @@
-import PVector from "pvectorjs";
+import PVector from "./lib/pvector";
 // todo - pvectorjs ==> vecti
 var MAX_ANGLE = 360;
 var MIN_ANGLE = 0;
@@ -25,9 +25,9 @@ var Boid = /** @class */ (function () {
         var sep = this.sperate(boids);
         var ali = this.align(boids);
         var coh = this.cohesion(boids);
-        sep.mult(1.5);
-        ali.mult(1.0);
-        coh.mult(1.0);
+        sep.multiply(1.5);
+        ali.multiply(1.0);
+        coh.multiply(1.0);
         this.applyForce(sep); // 가속도에 끼칠 영향도(weight)
         this.applyForce(ali); // 가속도에 끼칠 영향도(weight)
         this.applyForce(coh); // 가속도에 끼칠 영향도(weight)
@@ -37,10 +37,10 @@ var Boid = /** @class */ (function () {
         // 속도 계산 (가속 추가)
         this.velocity.add(this.acceleration);
         // 속도 limit
-        this.velocity.maxMag(Boid.maxSpeed);
+        this.velocity.limit(Boid.maxSpeed);
         this.position.add(this.velocity);
         // 가속 초기화
-        this.acceleration.mult(0);
+        this.acceleration.multiply(0);
     };
     // 화면 밖에 벗어나면 반대편으로 랜더링
     Boid.prototype.border = function () {
@@ -71,24 +71,24 @@ var Boid = /** @class */ (function () {
         var count = 0;
         for (var _i = 0, boids_1 = boids; _i < boids_1.length; _i++) {
             var other = boids_1[_i];
-            var distance = PVector.prototype.dist(this.position, other.position);
+            var distance = this.position.distance(other.position);
             if ((distance > 0) && (distance < Boid.desiredSeparation)) {
-                var diff = PVector.prototype.sub(this.position, other.position);
-                diff.norm();
-                diff.div(distance);
+                var diff = this.position.subtract(other.position);
+                diff.normalize();
+                diff.divide(distance);
                 mean.add(diff);
                 count++;
             }
         }
         if (count > 0) {
-            mean.div(count);
+            mean.divide(count);
         }
         // 제외해도 됨
-        if (mean.mag() > 0) {
-            mean.norm();
-            mean.mult(Boid.maxSpeed);
-            mean.sub(this.velocity);
-            mean.maxMag(Boid.maxForce);
+        if (mean.magnitude() > 0) {
+            mean.normalize();
+            mean.multiply(Boid.maxSpeed);
+            mean.subtract(this.velocity);
+            mean.limit(Boid.maxForce);
         }
         return mean;
     };
@@ -102,18 +102,18 @@ var Boid = /** @class */ (function () {
         for (var _i = 0, boids_2 = boids; _i < boids_2.length; _i++) {
             var other = boids_2[_i];
             // 개체 간의 거리계산
-            var distance = PVector.prototype.dist(this.position, other.position);
+            var distance = this.position.distance(other.position);
             if ((distance > 0) && (distance < Boid.neighbourRadius)) {
                 mean.add(other.velocity); // 응집과 다른점
                 count++;
             }
         }
         if (count > 0) {
-            mean.div(count);
-            mean.norm(); //제외가능
-            mean.mult(Boid.maxSpeed); // 정규화 (제외가능)
-            var steer = PVector.sub(mean, this.velocity); //제외가능
-            steer.maxMag(Boid.maxForce);
+            mean.divide(count);
+            mean.normalize(); //제외가능
+            mean.multiply(Boid.maxSpeed); // 정규화 (제외가능)
+            var steer = mean.subtract(this.velocity); //제외가능
+            steer.limit(Boid.maxForce);
             return steer;
         }
         else {
@@ -130,14 +130,14 @@ var Boid = /** @class */ (function () {
         // 2. 개체 간의 거리가 neighbourRadius보다 작으면, sum 벡터 누적
         for (var _i = 0, boids_3 = boids; _i < boids_3.length; _i++) {
             var other = boids_3[_i];
-            var distance = PVector.prototype.dist(this.position, other.position);
+            var distance = this.position.distance(other.position);
             if ((distance > 0) && (distance < Boid.neighbourRadius)) {
                 sum.add(other.position);
                 count++;
             }
         }
         if (count > 0) {
-            sum.div(count); // sum의 평균 구하기
+            sum.divide(count); // sum의 평균 구하기
             return this.seek(sum);
         }
         else {
@@ -147,13 +147,13 @@ var Boid = /** @class */ (function () {
     // 현재 위치와 갈 곳을 계산해서 보이드의 방향을 계산해주는 메서드
     Boid.prototype.seek = function (target) {
         // 현재 위치에서 가려하는 곳을 가리키는 벡터
-        var desired = PVector.prototype.sub(target, this.position);
-        if (desired > 0) {
-            desired.norm();
-            desired.mult(Boid.maxSpeed); // 원하는 벡터의 크기를 계산
+        var desired = target.subtract(this.position);
+        if (desired.magnitude() > 0) {
+            desired.normalize();
+            desired.multiply(Boid.maxSpeed); // 원하는 벡터의 크기를 계산
             // Steering = Desired minus Velocity
-            var steer = PVector.prototype.sub(desired, this.velocity);
-            steer.maxMag(Boid.maxForce); // 방향 전환 정도에 제한을 둔다.
+            var steer = desired.subtract(this.velocity);
+            steer.limit(Boid.maxForce); // 방향 전환 정도에 제한을 둔다.
             return steer;
         }
         else {

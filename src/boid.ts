@@ -1,5 +1,4 @@
-import PVector from "pvectorjs";
-
+import PVector from "./lib/pvector";
 // todo - pvectorjs ==> vecti
 
 const MAX_ANGLE: number = 360;
@@ -55,9 +54,9 @@ class Boid {
         const ali:PVector = this.align(boids);
         const coh:PVector = this.cohesion(boids);
 
-        sep.mult(1.5);
-        ali.mult(1.0);
-        coh.mult(1.0);
+        sep.multiply(1.5);
+        ali.multiply(1.0);
+        coh.multiply(1.0);
 
         this.applyForce(sep); // 가속도에 끼칠 영향도(weight)
         this.applyForce(ali); // 가속도에 끼칠 영향도(weight)
@@ -70,10 +69,10 @@ class Boid {
         this.velocity.add(this.acceleration);
 
         // 속도 limit
-        this.velocity.maxMag(Boid.maxSpeed);
+        this.velocity.limit(Boid.maxSpeed);
         this.position.add(this.velocity);
         // 가속 초기화
-        this.acceleration.mult(0);
+        this.acceleration.multiply(0);
     }
 
 
@@ -106,27 +105,28 @@ class Boid {
         let count: number = 0;
 
         for(const other of boids){
-            let distance: PVector = PVector.prototype.dist(this.position, other.position);
+
+            const distance: number = this.position.distance(other.position);
 
             if((distance > 0) && (distance < Boid.desiredSeparation)) {
-                const diff: PVector = PVector.prototype.sub(this.position, other.position);
-                diff.norm();
-                diff.div(distance);
+                const diff: PVector = this.position.subtract(other.position);
+                diff.normalize();
+                diff.divide(distance);
                 mean.add(diff);
                 count++;
             }
         }
 
         if(count > 0){
-            mean.div(count);
+            mean.divide(count);
         }
 
         // 제외해도 됨
-        if (mean.mag() > 0){
-            mean.norm();
-            mean.mult(Boid.maxSpeed);
-            mean.sub(this.velocity);
-            mean.maxMag(Boid.maxForce);
+        if (mean.magnitude() > 0){
+            mean.normalize();
+            mean.multiply(Boid.maxSpeed);
+            mean.subtract(this.velocity);
+            mean.limit(Boid.maxForce);
         }
 
         return mean;
@@ -143,7 +143,7 @@ class Boid {
 
         for(const other of boids){
             // 개체 간의 거리계산
-            const distance: number = PVector.prototype.dist(this.position, other.position);
+            const distance: number = this.position.distance(other.position);
 
             if ((distance > 0) && (distance < Boid.neighbourRadius)){
                 mean.add(other.velocity); // 응집과 다른점
@@ -152,11 +152,11 @@ class Boid {
         }
 
         if(count > 0){
-            mean.div(count);
-            mean.norm(); //제외가능
-            mean.mult(Boid.maxSpeed); // 정규화 (제외가능)
-            let steer:PVector = PVector.sub(mean, this.velocity); //제외가능
-            steer.maxMag(Boid.maxForce);
+            mean.divide(count);
+            mean.normalize(); //제외가능
+            mean.multiply(Boid.maxSpeed); // 정규화 (제외가능)
+            let steer:PVector =  mean.subtract(this.velocity); //제외가능
+            steer.limit(Boid.maxForce);
             return steer;
         }else{
             return new PVector(0, 0);
@@ -173,7 +173,7 @@ class Boid {
         // 1. 개체간의 거리계산
         // 2. 개체 간의 거리가 neighbourRadius보다 작으면, sum 벡터 누적
         for(const other of boids){
-            const distance: number = PVector.prototype.dist(this.position, other.position);
+            const distance: number = this.position.distance(other.position);
 
             if((distance > 0) && (distance < Boid.neighbourRadius)){
                 sum.add(other.position);
@@ -182,7 +182,7 @@ class Boid {
         }
 
         if(count > 0){
-            sum.div(count); // sum의 평균 구하기
+            sum.divide(count); // sum의 평균 구하기
             return this.seek(sum);
         }else{
             return new PVector(0, 0);
@@ -192,15 +192,15 @@ class Boid {
     // 현재 위치와 갈 곳을 계산해서 보이드의 방향을 계산해주는 메서드
     seek(target: PVector): PVector {
         // 현재 위치에서 가려하는 곳을 가리키는 벡터
-        let desired: PVector = PVector.prototype.sub(target, this.position);
+        let desired: PVector = target.subtract(this.position);
 
-        if(desired > 0){
-            desired.norm();
-            desired.mult(Boid.maxSpeed); // 원하는 벡터의 크기를 계산
+        if(desired.magnitude() > 0){
+            desired.normalize();
+            desired.multiply(Boid.maxSpeed); // 원하는 벡터의 크기를 계산
 
             // Steering = Desired minus Velocity
-            let steer: PVector = PVector.prototype.sub(desired, this.velocity);
-            steer.maxMag(Boid.maxForce); // 방향 전환 정도에 제한을 둔다.
+            let steer: PVector = desired.subtract(this.velocity);
+            steer.limit(Boid.maxForce); // 방향 전환 정도에 제한을 둔다.
             return steer;        
         }else{
             return new PVector(0, 0);
