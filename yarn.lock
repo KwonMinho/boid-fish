@@ -465,6 +465,11 @@
     "end-of-stream" "^1.1.0"
     "once" "^1.3.1"
 
+"pvectorjs@^2.0.8":
+  "integrity" "sha512-i7WZcezexGwXFxS/0Ka4dNrYSfk/NVS1xacQ3HBkZ1P1MnMCsgtGOtPULD8pl4l7a6E+tqkoblR3msLVOHGxMg=="
+  "resolved" "https://registry.npmjs.org/pvectorjs/-/pvectorjs-2.0.8.tgz"
+  "version" "2.0.8"
+
 "readable-stream@^2.2.2":
   "integrity" "sha512-Ebho8K4jIbHAxnuxi7o42OrZgF/ZTNcsZj6nRKyUmkhLFq8CHItp/fy6hQZuZmP/n3yZ9VBUbp4zz/mX8hmYPw=="
   "resolved" "https://registry.npmjs.org/readable-stream/-/readable-stream-2.3.7.tgz"

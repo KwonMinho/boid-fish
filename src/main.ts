@@ -8,38 +8,39 @@ const MIN_ANGLE: number  = 0;
 const CURRENT_FISH_SRC: string = './resource/blowfish.svg';
 
 
+
+const canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('canvas');
+canvas.width = window.innerWidth;
+canvas.height = window.innerWidth;
+
+const ctx:CanvasRenderingContext2D = canvas.getContext('2d');
+
+const MONITOR_HZ: number = 144;
+let timer: number = 0;
+
+
 class Boid {
 
     position: PVector;
     velocity: PVector;
     acceleration: PVector;
 
-    width: number;
-    height: number;
 
-    ctx: CanvasRenderingContext2D;
-
-    private static readonly maxForce: number = 0.03; // 최대 조향력
-    private static readonly maxSpeed: number = 2;  // 최대 속도
+    private static readonly maxForce: number = 0.05; // 최대 조향력
+    private static readonly maxSpeed: number = 3;  // 최대 속도
 
     // desiredSeparation은 neighourRadius보다 크면 안됨 (만약 크다면, 보이드는 모든 보이드를 배척하게 됨)
     private static readonly desiredSeparation: number = 25;
-    private static readonly neighbourRadius: number = 50;
+    private static readonly neighbourRadius: number = 100;
 
     
-
-    constructor(x: number, y: number, width: number, height: number, ctx: CanvasRenderingContext2D){
+    constructor(x: number, y: number){
         const rand =  Math.random() * (MAX_ANGLE - MIN_ANGLE + 1) + MAX_ANGLE;
         const angle: number = Math.floor(rand);
         
         this.velocity = new PVector(Math.cos(angle), Math.sin(angle));
         this.position = new PVector(x, y);
         this.acceleration = new PVector(0, 0);
-
-        this.width = width;
-        this.height = height;
-
-        this.ctx = ctx;
     }
 
     run(boids: Array<Boid>): void{
@@ -81,16 +82,16 @@ class Boid {
     // 화면 밖에 벗어나면 반대편으로 랜더링
     border(): void {
         const r: number = 2;
-        if (this.position.x < -r) this.position.x = this.width + r;
-        if (this.position.y < -r) this.position.y = this.height + r;
-        if (this.position.x > this.width + r) this.position.x = -r;
-        if (this.position.y > this.height + r) this.position.y = -r;
+        if (this.position.x < -r) this.position.x = canvas.width + r;
+        if (this.position.y < -r) this.position.y = canvas.height + r;
+        if (this.position.x > canvas.width + r) this.position.x = -r;
+        if (this.position.y > canvas.height + r) this.position.y = -r;
     }
 
     render(): void {
         const fishImg: HTMLImageElement = new Image();
         fishImg.src = CURRENT_FISH_SRC;  
-        this.ctx.drawImage(fishImg, this.position.x, this.position.y);
+        ctx.drawImage(fishImg, this.position.x, this.position.y);
     }
 
     applyForce(force: PVector){
@@ -107,11 +108,10 @@ class Boid {
         let count: number = 0;
 
         for(const other of boids){
-
-            const distance: number = this.position.distance(other.position);
+            const distance: number = PVector.distance(this.position, other.position);
 
             if((distance > 0) && (distance < Boid.desiredSeparation)) {
-                const diff: PVector = this.position.subtract(other.position);
+                const diff: PVector = PVector.substract(this.position, other.position);
                 diff.normalize();
                 diff.divide(distance);
                 mean.add(diff);
@@ -130,7 +130,6 @@ class Boid {
             mean.subtract(this.velocity);
             mean.limit(Boid.maxForce);
         }
-
         return mean;
     }
 
@@ -140,24 +139,24 @@ class Boid {
     // 응집과 기본 로직은 비슷
     // 단, 위치의 평균이 아니라 속도의 평균인 점이 다르다.
     align(boids: Array<Boid>): PVector {
-        let mean: PVector = new PVector(0, 0);
+        let sum: PVector = new PVector(0, 0);
         let count: number = 0;
 
         for(const other of boids){
             // 개체 간의 거리계산
-            const distance: number = this.position.distance(other.position);
+            const distance: number = PVector.distance(this.position, other.position);
 
             if ((distance > 0) && (distance < Boid.neighbourRadius)){
-                mean.add(other.velocity); // 응집과 다른점
+                sum.add(other.velocity); // 응집과 다른점
                 count++;
             }
         }
 
         if(count > 0){
-            mean.divide(count);
-            mean.normalize(); //제외가능
-            mean.multiply(Boid.maxSpeed); // 정규화 (제외가능)
-            let steer:PVector =  mean.subtract(this.velocity); //제외가능
+            sum.divide(count);
+            sum.normalize();
+            sum.multiply(Boid.maxSpeed);
+            let steer:PVector = PVector.substract(sum, this.velocity);
             steer.limit(Boid.maxForce);
             return steer;
         }else{
@@ -175,7 +174,7 @@ class Boid {
         // 1. 개체간의 거리계산
         // 2. 개체 간의 거리가 neighbourRadius보다 작으면, sum 벡터 누적
         for(const other of boids){
-            const distance: number = this.position.distance(other.position);
+            const distance: number = PVector.distance(this.position, other.position);
 
             if((distance > 0) && (distance < Boid.neighbourRadius)){
                 sum.add(other.position);
@@ -194,14 +193,14 @@ class Boid {
     // 현재 위치와 갈 곳을 계산해서 보이드의 방향을 계산해주는 메서드
     seek(target: PVector): PVector {
         // 현재 위치에서 가려하는 곳을 가리키는 벡터
-        let desired: PVector = target.subtract(this.position);
+        let desired: PVector = PVector.substract(target, this.position);
 
         if(desired.magnitude() > 0){
             desired.normalize();
             desired.multiply(Boid.maxSpeed); // 원하는 벡터의 크기를 계산
 
             // Steering = Desired minus Velocity
-            let steer: PVector = desired.subtract(this.velocity);
+            let steer: PVector = PVector.substract(desired,this.velocity);
             steer.limit(Boid.maxForce); // 방향 전환 정도에 제한을 둔다.
             return steer;        
         }else{
@@ -243,7 +242,7 @@ class PVector {
         this.z = z || 0;
     }
 
-    add(vec_or_scal: PVector): PVector {
+    add(vec_or_scal: PVector|number): PVector {
         this.addX(vec_or_scal);
         this.addY(vec_or_scal);
         return this;
@@ -266,6 +265,14 @@ class PVector {
         else this.z += vec_or_scal.z
         return this
     }
+
+    static substract(v1: PVector| number, v2: PVector|number){
+        const result: PVector = new PVector();
+        result.add(v1);
+        result.subtract(v2);
+        return result;
+    }
+
 
     subtract(vec_or_scal: PVector|number): PVector {
         this.subtractX(vec_or_scal);
@@ -292,24 +299,24 @@ class PVector {
         return this
     }
 
-    distance(vec: PVector): number {
+    static distance(vec: PVector, vec2: PVector): number {
         return Math.sqrt(
-            this.distanceX(vec) ** 2 +
-            this.distanceY(vec) ** 2 +
-            this.distanceZ(vec) ** 2 
+            PVector.distanceX(vec, vec2) ** 2 +
+            PVector.distanceY(vec, vec2) ** 2 +
+            PVector.distanceZ(vec, vec2) ** 2 
         );
     }
 
-    distanceX(vec: PVector): number {
-        return vec.x - this.x
+    static distanceX(vec: PVector, vec2: PVector): number {
+        return vec.x - vec2.x
     }
 
-    distanceY(vec: PVector): number {
-        return vec.y - this.y
+    static distanceY(vec: PVector, vec2: PVector): number {
+        return vec.y - vec2.y
     }
 
-    distanceZ(vec: PVector): number {
-        return vec.z - this.z
+    static distanceZ(vec: PVector, vec2: PVector): number {
+        return vec.z - vec2.z
     }
 
 
@@ -384,31 +391,18 @@ class PVector {
 
 /*******************/
 
-let canvas: HTMLCanvasElement = <HTMLCanvasElement>document.getElementById('canvas');
-let ctx:CanvasRenderingContext2D = canvas.getContext('2d');
-
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerWidth;
-
-const MONITOR_HZ: number = 144;
-let timer: number = 0;
 
 
 const flock:Flock = new Flock();
 
-console.log(canvas.width, canvas.height)
 
 for(let i=0; i<20; i ++){
     const randomX: number = ((Math.random() * (canvas.width-0)) + canvas.width) % canvas.width;
     const randomY: number = ((Math.random() * (canvas.height-0)) + canvas.height) % canvas.height;
-    console.log(randomX, randomY);
+
     const boid: Boid = new Boid(
         randomX, 
-        randomY,
-        canvas.width,
-        canvas.height, 
-        ctx
+        randomY
     );
     flock.addBoid(boid)
 }
@@ -420,18 +414,18 @@ function animation(){
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     
-    if(timer % MONITOR_HZ === 0){
-        const randomX: number = ((Math.random() * (canvas.width-0)) + canvas.width) % canvas.width;
-        const randomY: number = ((Math.random() * (canvas.height-0)) + canvas.height) % canvas.height;
-        const boid: Boid = new Boid(
-            randomX, 
-            randomY,
-            canvas.width,
-            canvas.height, 
-            ctx
-        );
-        flock.addBoid(boid)
-    }
+    // if(timer % MONITOR_HZ === 0){
+    //     const randomX: number = ((Math.random() * (canvas.width-0)) + canvas.width) % canvas.width;
+    //     const randomY: number = ((Math.random() * (canvas.height-0)) + canvas.height) % canvas.height;
+    //     const boid: Boid = new Boid(
+    //         randomX, 
+    //         randomY,
+    //         canvas.width,
+    //         canvas.height, 
+    //         ctx
+    //     );
+    //     flock.addBoid(boid)
+    // }
 
     flock.run();
 }
