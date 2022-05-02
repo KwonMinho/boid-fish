@@ -26,7 +26,7 @@ var Boid = /** @class */ (function () {
         var sep = this.sperate(boids);
         var ali = this.align(boids);
         var coh = this.cohesion(boids);
-        sep.multiply(1.5);
+        sep.multiply(3);
         ali.multiply(1.0);
         coh.multiply(1.0);
         this.applyForce(sep); // 가속도에 끼칠 영향도(weight)
@@ -58,7 +58,7 @@ var Boid = /** @class */ (function () {
     Boid.prototype.render = function () {
         var fishImg = new Image();
         fishImg.src = CURRENT_FISH_SRC;
-        ctx.drawImage(fishImg, this.position.x, this.position.y);
+        ctx.drawImage(fishImg, this.position.x, this.position.y, 50, 50);
     };
     Boid.prototype.applyForce = function (force) {
         this.acceleration.add(force);
@@ -85,12 +85,12 @@ var Boid = /** @class */ (function () {
             mean.divide(count);
         }
         // 제외해도 됨
-        if (mean.magnitude() > 0) {
-            mean.normalize();
-            mean.multiply(Boid.maxSpeed);
-            mean.subtract(this.velocity);
-            mean.limit(Boid.maxForce);
-        }
+        // if (mean.magnitude() > 0){
+        //     mean.normalize();4
+        //     mean.multiply(Boid.maxSpeed);
+        //     mean.subtract(this.velocity);
+        //     mean.limit(Boid.maxForce);
+        // }
         return mean;
     };
     // 정렬하다
@@ -163,7 +163,7 @@ var Boid = /** @class */ (function () {
         // max speed로 조정하다
     };
     Boid.maxForce = 0.05; // 최대 조향력
-    Boid.maxSpeed = 3; // 최대 속도
+    Boid.maxSpeed = 2; // 최대 속도
     // desiredSeparation은 neighourRadius보다 크면 안됨 (만약 크다면, 보이드는 모든 보이드를 배척하게 됨)
     Boid.desiredSeparation = 25;
     Boid.neighbourRadius = 100;
@@ -346,18 +346,12 @@ function animation() {
     requestAnimationFrame(animation);
     timer++;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // if(timer % MONITOR_HZ === 0){
-    //     const randomX: number = ((Math.random() * (canvas.width-0)) + canvas.width) % canvas.width;
-    //     const randomY: number = ((Math.random() * (canvas.height-0)) + canvas.height) % canvas.height;
-    //     const boid: Boid = new Boid(
-    //         randomX, 
-    //         randomY,
-    //         canvas.width,
-    //         canvas.height, 
-    //         ctx
-    //     );
-    //     flock.addBoid(boid)
-    // }
+    if (timer % MONITOR_HZ === 0) {
+        var randomX = ((Math.random() * (canvas.width - 0)) + canvas.width) % canvas.width;
+        var randomY = ((Math.random() * (canvas.height - 0)) + canvas.height) % canvas.height;
+        var boid = new Boid(randomX, randomY);
+        flock.addBoid(boid);
+    }
     flock.run();
 }
 animation();
